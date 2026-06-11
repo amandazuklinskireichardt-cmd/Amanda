@@ -1,0 +1,1178 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agro Futuro Brasil</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:   #1a4731;
+    --green2:  #2d6a4f;
+    --amber:   #d4a017;
+    --cream:   #faf7f2;
+    --white:   #ffffff;
+    --muted:   #6b7280;
+    --border:  #e5e7eb;
+    --radius:  1.25rem;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--cream);
+    color: #1f2937;
+    overflow-x: hidden;
+  }
+
+  /* ── TYPOGRAPHY ─────────────────────────────── */
+  .serif  { font-family: 'Georgia', serif; }
+  .sans   { font-family: Arial, Helvetica, sans-serif; }
+  .tag    { font-family: Arial, sans-serif; font-size: .7rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--amber); display: block; margin-bottom: .75rem; }
+  .h1     { font-size: clamp(2.4rem, 7vw, 5.5rem); font-weight: 700; line-height: 1.1; }
+  .h2     { font-size: clamp(1.8rem, 4vw, 3.2rem); font-weight: 700; line-height: 1.2; }
+  .h3     { font-size: clamp(1.2rem, 2.5vw, 1.75rem); font-weight: 700; }
+  .lead   { font-size: 1.1rem; line-height: 1.7; color: var(--muted); font-family: Arial, sans-serif; font-weight: 400; }
+  .italic { font-style: italic; color: var(--amber); }
+
+  /* ── LAYOUT ──────────────────────────────────── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+  .section    { padding: 6rem 1.5rem; }
+  .section-cream { background: var(--cream); }
+  .section-white { background: var(--white); }
+  .section-green { background: var(--green); color: #fff; }
+  .section-green2 { background: var(--green2); color: #fff; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* ── NAV ─────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .9rem 2rem;
+    background: rgba(250,247,242,.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,.07);
+  }
+  .nav-brand { display: flex; align-items: center; gap: .5rem; font-size: 1.3rem; font-weight: 700; color: var(--green); text-decoration: none; }
+  .nav-brand svg { width: 28px; height: 28px; fill: var(--green); }
+  .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+  .nav-links a { font-family: Arial, sans-serif; font-size: .85rem; font-weight: 600; color: #374151; text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: var(--amber); }
+  .btn-nav {
+    font-family: Arial, sans-serif; font-size: .85rem; font-weight: 700;
+    background: var(--green); color: #fff; border: none; cursor: pointer;
+    padding: .55rem 1.4rem; border-radius: 999px; transition: background .2s;
+  }
+  .btn-nav:hover { background: var(--green2); }
+  @media (max-width: 768px) { .nav-links { display: none; } }
+
+  /* ── BUTTONS ─────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: Arial, sans-serif; font-weight: 700; font-size: 1rem;
+    padding: .85rem 2rem; border-radius: 999px; border: none; cursor: pointer;
+    text-decoration: none; transition: all .2s;
+  }
+  .btn-primary   { background: var(--amber); color: #1f1a0e; }
+  .btn-primary:hover { background: #b88a10; }
+  .btn-outline   { background: transparent; color: #fff; border: 2px solid #fff; }
+  .btn-outline:hover { background: #fff; color: var(--green); }
+  .btn-green     { background: var(--green); color: #fff; }
+  .btn-green:hover { background: var(--green2); }
+  .btn-sm { font-size: .85rem; padding: .6rem 1.4rem; }
+
+  /* ── HERO ────────────────────────────────────── */
+  #hero-section {
+    position: relative; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; padding-top: 5rem;
+  }
+  #hero-canvas-wrap {
+    position: absolute; inset: 0; z-index: 0;
+  }
+  #hero-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+  .hero-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to bottom, rgba(0,0,0,.38) 0%, rgba(0,0,0,.18) 60%, rgba(0,0,0,.5) 100%);
+  }
+  .hero-img {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; object-fit: cover; object-position: center;
+  }
+  .hero-content {
+    position: relative; z-index: 2; text-align: center;
+    color: #fff; padding: 0 1.5rem; max-width: 900px;
+  }
+  .hero-badge {
+    display: inline-block; padding: .35rem 1rem;
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3);
+    border-radius: 999px; font-family: Arial, sans-serif;
+    font-size: .7rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
+    margin-bottom: 1.5rem; backdrop-filter: blur(6px);
+  }
+  .hero-content h1 { margin-bottom: 1.25rem; }
+  .hero-content .lead { color: rgba(255,255,255,.88); margin-bottom: 2rem; max-width: 640px; margin-left: auto; margin-right: auto; }
+  .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .scroll-hint {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    z-index: 2; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    color: rgba(255,255,255,.65); font-family: Arial, sans-serif; font-size: .7rem;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px; height: 48px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.7), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse { 0%,100%{transform:scaleY(1);opacity:1} 50%{transform:scaleY(1.2);opacity:.5} }
+
+  /* ── ABOUT ───────────────────────────────────── */
+  .photo-card {
+    position: relative; border-radius: var(--radius); overflow: hidden;
+    height: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  }
+  .photo-card img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-card-caption {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0,0,0,.7), transparent);
+    color: #fff;
+  }
+  .photo-card-caption p { font-size: .85rem; opacity: .75; font-family: Arial, sans-serif; margin-top: .25rem; }
+
+  .check-list { list-style: none; display: flex; flex-direction: column; gap: .85rem; margin: 1.5rem 0 2rem; }
+  .check-list li {
+    display: flex; align-items: flex-start; gap: .75rem;
+    font-family: Arial, sans-serif; font-size: .95rem; font-weight: 600; color: #1f2937;
+  }
+  .check-dot {
+    width: 22px; height: 22px; border-radius: 50%; background: rgba(212,160,23,.2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+    color: var(--amber); font-size: .75rem; font-weight: 700;
+  }
+
+  /* ── PILARES ─────────────────────────────────── */
+  .pilar-card {
+    background: #fff; border-radius: var(--radius); padding: 2rem;
+    border: 1px solid var(--border); transition: box-shadow .2s;
+  }
+  .pilar-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.1); }
+  .pilar-icon {
+    width: 52px; height: 52px; border-radius: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 1.25rem;
+  }
+
+  /* ── VANTAGENS ───────────────────────────────── */
+  .vantagem-card {
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+    border-radius: var(--radius); padding: 2rem;
+    transition: background .2s;
+  }
+  .vantagem-card:hover { background: rgba(255,255,255,.18); }
+  .vantagem-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .3rem .9rem; border-radius: 999px; border: 1px solid;
+    font-family: Arial, sans-serif; font-size: .78rem; font-weight: 700; margin-bottom: 1rem;
+  }
+  .badge-green  { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+  .badge-red    { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+  .badge-blue   { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+
+  /* ── ENERGY CARDS ────────────────────────────── */
+  .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .energy-card {
+    background: var(--cream); border-radius: var(--radius); padding: 1.5rem;
+    border: 1px solid var(--border);
+  }
+  .energy-card .icon { font-size: 2rem; margin-bottom: .75rem; }
+  .energy-highlight {
+    background: var(--green); color: #fff; border-radius: var(--radius);
+    padding: 1.5rem; display: flex; flex-direction: column; justify-content: center;
+  }
+  .energy-highlight .big { font-size: 2.5rem; font-weight: 700; font-family: Georgia; }
+
+  /* ── STATS OVERLAY ───────────────────────────── */
+  .stats-banner {
+    position: relative; overflow: hidden; border-radius: var(--radius);
+  }
+  .stats-banner img { width: 100%; height: 420px; object-fit: cover; display: block; }
+  .stats-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.72) 50%, rgba(0,0,0,.1));
+    display: flex; align-items: flex-end; padding: 2.5rem;
+  }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; width: 100%; }
+  .stat-box {
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 1rem; padding: 1.25rem; text-align: center; backdrop-filter: blur(4px);
+  }
+  .stat-box .big { font-size: 2rem; font-weight: 700; color: var(--amber); font-family: Georgia; }
+  .stat-box p   { font-size: .78rem; color: rgba(255,255,255,.75); margin-top: .3rem; font-family: Arial, sans-serif; line-height: 1.4; }
+  @media (max-width: 700px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+
+  /* ── SPECIES CARDS ───────────────────────────── */
+  .species-card {
+    border-radius: var(--radius); overflow: hidden;
+    background: #fff; border: 1px solid var(--border);
+    transition: box-shadow .2s;
+  }
+  .species-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.1); }
+  .species-img { position: relative; height: 200px; }
+  .species-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .species-card:hover .species-img img { transform: scale(1.05); }
+  .species-img .badge {
+    position: absolute; top: .75rem; left: .75rem;
+    background: var(--amber); color: #1f1a0e;
+    font-family: Arial, sans-serif; font-size: .68rem; font-weight: 700;
+    padding: .25rem .75rem; border-radius: 999px; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .species-body { padding: 1.25rem; }
+  .species-body .sci { font-family: Arial, sans-serif; font-size: .78rem; font-style: italic; color: var(--amber); margin: .15rem 0 .6rem; }
+  .species-body p { font-family: Arial, sans-serif; font-size: .82rem; color: var(--muted); line-height: 1.6; }
+  .species-body .tipo {
+    display: inline-block; margin-bottom: .5rem;
+    padding: .18rem .7rem; border-radius: 999px; border: 1px solid var(--border);
+    font-family: Arial, sans-serif; font-size: .7rem; color: var(--muted);
+  }
+
+  /* ── INSUMOS GRID ────────────────────────────── */
+  .insumo-card { border-radius: var(--radius); padding: 1.5rem; border: 1px solid; }
+  .insumo-item { margin-bottom: 1rem; }
+  .insumo-item:last-child { margin-bottom: 0; }
+  .insumo-item strong { font-family: Arial, sans-serif; font-size: .9rem; color: #1f2937; display: block; margin-bottom: .2rem; }
+  .insumo-item span   { font-family: Arial, sans-serif; font-size: .78rem; color: var(--muted); line-height: 1.55; }
+
+  /* ── PEOPLE QUOTE ────────────────────────────── */
+  .quote-bar {
+    border-left: 3px solid var(--amber); padding-left: 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .quote-bar blockquote { font-size: 1.3rem; font-style: italic; color: #374151; line-height: 1.5; }
+  .quote-bar cite { font-family: Arial, sans-serif; font-size: .75rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: .75rem; display: block; }
+
+  /* ── CTA SECTION ─────────────────────────────── */
+  .cta-section { text-align: center; padding: 7rem 1.5rem; }
+  .cta-section .leaf-icon { font-size: 3rem; margin-bottom: 1.5rem; }
+
+  /* ── FOOTER ──────────────────────────────────── */
+  footer {
+    background: #fff; border-top: 1px solid var(--border);
+    padding: 4rem 1.5rem 2rem;
+  }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
+  @media (max-width: 700px) { .footer-grid { grid-template-columns: 1fr; } }
+  .footer-brand { font-size: 1.2rem; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+  .footer-desc  { font-family: Arial, sans-serif; font-size: .85rem; color: var(--muted); line-height: 1.6; }
+  .footer-col h4 { font-family: Arial, sans-serif; font-size: .7rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: #9ca3af; margin-bottom: 1rem; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: .65rem; }
+  .footer-col a, .footer-col button {
+    font-family: Arial, sans-serif; font-size: .85rem; color: var(--muted);
+    text-decoration: none; background: none; border: none; cursor: pointer; padding: 0; text-align: left;
+    transition: color .2s;
+  }
+  .footer-col a:hover, .footer-col button:hover { color: var(--green); }
+  .footer-contact-item { display: flex; align-items: flex-start; gap: .6rem; font-family: Arial, sans-serif; font-size: .85rem; color: var(--muted); }
+  .footer-contact-item .icon { color: var(--green); font-size: .9rem; margin-top: 1px; flex-shrink: 0; }
+  .footer-bottom { border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .footer-bottom p, .footer-bottom button { font-family: Arial, sans-serif; font-size: .82rem; color: var(--muted); background: none; border: none; cursor: pointer; }
+  .footer-bottom button:hover { color: var(--green); }
+
+  /* ── MODAL ───────────────────────────────────── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,.58); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 1.5rem; width: 100%; max-width: 480px;
+    overflow: hidden; position: relative; box-shadow: 0 32px 80px rgba(0,0,0,.25);
+    animation: modalIn .3s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(.93) translateY(20px)} to{opacity:1;transform:none} }
+  .modal-header { background: var(--green); padding: 2rem; color: #fff; position: relative; }
+  .modal-header .tag { color: var(--amber); }
+  .modal-header h2 { font-size: 1.4rem; font-weight: 700; }
+  .modal-header p  { font-family: Arial, sans-serif; font-size: .85rem; color: rgba(255,255,255,.65); margin-top: .3rem; }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: rgba(255,255,255,.15); border: none; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(255,255,255,.7); font-size: 1rem; transition: background .2s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,.3); }
+  .modal-body { padding: 2rem; }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label { font-family: Arial, sans-serif; font-size: .85rem; font-weight: 700; display: block; margin-bottom: .5rem; color: #374151; }
+  .form-group input, .form-group textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: .75rem;
+    padding: .75rem 1rem; font-family: Arial, sans-serif; font-size: .9rem;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    background: #fff; color: #1f2937;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,71,49,.1); }
+  .form-group textarea { resize: none; height: 90px; }
+  .form-group.error input { border-color: #ef4444; background: #fef2f2; }
+  .form-error { color: #ef4444; font-family: Arial, sans-serif; font-size: .75rem; margin-top: .25rem; }
+  .perfis { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .perfil-btn {
+    padding: .35rem .85rem; border-radius: 999px; border: 1px solid var(--border);
+    background: #fff; font-family: Arial, sans-serif; font-size: .78rem; font-weight: 600;
+    color: var(--muted); cursor: pointer; transition: all .15s;
+  }
+  .perfil-btn.selected { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-submit {
+    width: 100%; background: var(--green); color: #fff; border: none; border-radius: .75rem;
+    padding: .85rem; font-family: Arial, sans-serif; font-size: .95rem; font-weight: 700;
+    cursor: pointer; transition: background .2s; display: flex; align-items: center; justify-content: center; gap: .5rem;
+  }
+  .btn-submit:hover { background: var(--green2); }
+  .modal-success { padding: 3rem 2rem; text-align: center; }
+  .modal-success .check { font-size: 3.5rem; color: #22c55e; margin-bottom: 1rem; animation: popIn .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+  .modal-success h3 { font-size: 1.4rem; font-weight: 700; color: var(--green); margin-bottom: .5rem; }
+  .modal-success p { font-family: Arial, sans-serif; font-size: .9rem; color: var(--muted); margin-bottom: 1.5rem; }
+  /* manifesto modal */
+  .manifesto-modal { max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; }
+  .manifesto-scroll { overflow-y: auto; flex: 1; padding: 2rem; }
+  .manifesto-intro { font-family: Arial, sans-serif; font-size: .9rem; color: var(--muted); font-style: italic; border-left: 2px solid var(--amber); padding-left: 1rem; margin-bottom: 2rem; line-height: 1.6; }
+  .manifesto-item { display: flex; gap: 1.25rem; margin-bottom: 1.75rem; }
+  .manifesto-num { font-size: 2rem; font-weight: 700; color: rgba(212,160,23,.35); line-height: 1; flex-shrink: 0; width: 2.5rem; }
+  .manifesto-item h4 { font-size: .95rem; font-weight: 700; color: var(--green); margin-bottom: .35rem; }
+  .manifesto-item p  { font-family: Arial, sans-serif; font-size: .82rem; color: var(--muted); line-height: 1.6; }
+  .manifesto-footer { padding: 1.25rem 2rem; border-top: 1px solid var(--border); background: var(--cream); display: flex; gap: .75rem; }
+  .manifesto-footer .btn { flex: 1; justify-content: center; }
+
+  /* ── P5 CANVASES ─────────────────────────────── */
+  #particles-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .p5-section { position: relative; overflow: hidden; }
+  #data-canvas-wrap { width: 100%; height: 340px; position: relative; }
+
+  /* ── FADE IN ─────────────────────────────────── */
+  .fade-in { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; }
+  .fade-in.visible { opacity: 1; transform: none; }
+
+  /* ── SECTION DIVIDER ─────────────────────────── */
+  .divider { width: 48px; height: 3px; background: var(--amber); border-radius: 2px; margin: 1rem 0 1.5rem; }
+  .divider-center { margin: 1rem auto 1.5rem; }
+
+  /* ── TABLE ───────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: .85rem; }
+  th { background: var(--green); color: #fff; padding: .75rem 1rem; text-align: left; font-weight: 700; }
+  td { padding: .7rem 1rem; border-bottom: 1px solid var(--border); color: #374151; }
+  tr:hover td { background: var(--cream); }
+  .tbl-wrap { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+
+  /* Imagem full-width breaker */
+  .img-breaker { position: relative; height: 55vh; overflow: hidden; }
+  .img-breaker img { width: 100%; height: 100%; object-fit: cover; }
+  .img-breaker-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.3);
+    display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem;
+  }
+  .img-breaker-overlay h2 { font-size: clamp(1.6rem, 4vw, 3.5rem); color: #fff; max-width: 800px; line-height: 1.2; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 2-8 2z"/></svg>
+    Agro Futuro
+  </a>
+  <ul class="nav-links">
+    <li><a href="#quem-somos">Sobre</a></li>
+    <li><a href="#pilares">Soluções</a></li>
+    <li><a href="#arvores">Árvores</a></li>
+    <li><a href="#pecuaria">Pecuária</a></li>
+    <li><a href="#dados-section">Dados</a></li>
+  </ul>
+  <button class="btn-nav" onclick="openContact()">Fale Conosco</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════ HERO -->
+<section id="hero-section">
+  <img class="hero-img" src="images/hero-panorama.png" alt="Agronegócio brasileiro" />
+  <div class="hero-overlay"></div>
+  <div id="hero-canvas-wrap"></div>
+  <div class="hero-content">
+    <div class="hero-badge">O Amanhã Começa Aqui</div>
+    <h1 class="h1 fade-in">
+      O Amanhã do Agronegócio<br><span class="italic">Já Começou.</span>
+    </h1>
+    <p class="lead fade-in" style="transition-delay:.15s">
+      Conectando tecnologia, sustentabilidade e inovação para transformar a produtividade no campo. O Agro Futuro Brasil traz as soluções que moldam a nova era da agricultura e da pecuária.
+    </p>
+    <div class="hero-btns fade-in" style="transition-delay:.3s">
+      <a href="#pilares" class="btn btn-primary">Conheça Nossas Soluções ›</a>
+      <button class="btn btn-outline" onclick="openContact()">Fale Conosco</button>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Role para explorar</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ QUEM SOMOS -->
+<section id="quem-somos" class="section section-cream">
+  <div class="container">
+    <div class="grid-2">
+      <div class="photo-card fade-in" style="order:1">
+        <img src="images/aerial-farm.png" alt="Vista aérea de fazenda sustentável" />
+        <div class="photo-card-caption">
+          <strong>Inovação com Raiz no Campo</strong>
+          <p>Sobre o Projeto</p>
+        </div>
+      </div>
+      <div class="fade-in" style="order:2;transition-delay:.15s">
+        <span class="tag">Quem Somos</span>
+        <h2 class="h2" style="color:var(--green);margin-bottom:1rem">Inovação com Raiz no Campo</h2>
+        <div class="divider"></div>
+        <p class="lead" style="margin-bottom:1rem">
+          O Agro Futuro Brasil nasceu com o propósito de ser a ponte entre a tecnologia de ponta e o produtor rural. Acreditamos que o futuro do ecossistema agroalimentar depende da digitalização, da eficiência e do respeito ao meio ambiente.
+        </p>
+        <p class="lead" style="margin-bottom:1.5rem">
+          Seja através de análises de dados, agricultura de precisão ou insights de mercado, nossa missão é capacitar quem produz para alimentar o mundo de forma inteligente e sustentável.
+        </p>
+        <ul class="check-list">
+          <li><div class="check-dot">›</div>Soluções digitais para o produtor moderno</li>
+          <li><div class="check-dot">›</div>Dados em tempo real do campo ao mercado</li>
+          <li><div class="check-dot">›</div>Compromisso com ESG e créditos de carbono</li>
+          <li><div class="check-dot">›</div>Suporte técnico em todo o Brasil</li>
+        </ul>
+        <a href="#pilares" class="btn btn-green btn-sm">Ver Nossas Soluções ›</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ PILARES -->
+<section id="pilares" class="section section-white">
+  <div class="container">
+    <div style="text-align:center;max-width:560px;margin:0 auto 3rem" class="fade-in">
+      <span class="tag">O Que Fazemos</span>
+      <h2 class="h2" style="color:var(--green)">Nossos Pilares</h2>
+      <div class="divider divider-center"></div>
+      <p class="lead">Três frentes de atuação que transformam a realidade do campo brasileiro.</p>
+    </div>
+    <div class="grid-3">
+      <div class="pilar-card fade-in">
+        <div class="pilar-icon" style="background:#fef9ec">💻</div>
+        <h3 class="h3" style="color:var(--green);margin-bottom:.75rem">Tecnologia e IoT</h3>
+        <p class="lead" style="font-size:.9rem">Implementação de sensores, monitoramento via satélite e drones para otimizar o manejo e reduzir custos operacionais.</p>
+      </div>
+      <div class="pilar-card fade-in" style="transition-delay:.1s">
+        <div class="pilar-icon" style="background:#f0fdf4">🌿</div>
+        <h3 class="h3" style="color:var(--green);margin-bottom:.75rem">Sustentabilidade (ESG)</h3>
+        <p class="lead" style="font-size:.9rem">Soluções voltadas para o manejo consciente, conservação do solo e práticas alinhadas ao mercado de créditos de carbono.</p>
+      </div>
+      <div class="pilar-card fade-in" style="transition-delay:.2s">
+        <div class="pilar-icon" style="background:#eff6ff">📊</div>
+        <h3 class="h3" style="color:var(--green);margin-bottom:.75rem">Inteligência de Mercado</h3>
+        <p class="lead" style="font-size:.9rem">Dados em tempo real, cotações e previsões assertivas para apoiar a tomada de decisão antes, durante e depois da colheita.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ VANTAGENS -->
+<section class="section section-green">
+  <div class="container">
+    <div style="text-align:center;max-width:560px;margin:0 auto 3rem" class="fade-in">
+      <span class="tag">Por que o Agro Futuro?</span>
+      <h2 class="h2" style="color:#fff">O Diferencial que o Campo Precisa</h2>
+      <div class="divider divider-center"></div>
+      <p class="lead" style="color:rgba(255,255,255,.65)">Resultados concretos para quem produz e para o planeta.</p>
+    </div>
+    <div class="grid-3">
+      <div class="vantagem-card fade-in">
+        <div class="vantagem-badge badge-green"><span>+</span> Produtividade</div>
+        <h3 class="h3" style="color:#fff;margin-bottom:.75rem">Produtividade</h3>
+        <p class="lead" style="color:rgba(255,255,255,.65);font-size:.9rem">Decisões baseadas em dados geram safras maiores e mais eficientes.</p>
+      </div>
+      <div class="vantagem-card fade-in" style="transition-delay:.1s">
+        <div class="vantagem-badge badge-red"><span>−</span> Desperdício</div>
+        <h3 class="h3" style="color:#fff;margin-bottom:.75rem">Desperdício</h3>
+        <p class="lead" style="color:rgba(255,255,255,.65);font-size:.9rem">Otimização do uso de insumos, água e recursos naturais.</p>
+      </div>
+      <div class="vantagem-card fade-in" style="transition-delay:.2s">
+        <div class="vantagem-badge badge-blue">📱 Gestão</div>
+        <h3 class="h3" style="color:#fff;margin-bottom:.75rem">Gestão na Palma da Mão</h3>
+        <p class="lead" style="color:rgba(255,255,255,.65);font-size:.9rem">Controle total da propriedade de onde você estiver, através da tecnologia.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ SUSTENTABILIDADE -->
+<section id="sustentabilidade" class="section section-cream">
+  <div class="container">
+    <div class="grid-2">
+      <div class="energy-grid fade-in">
+        <div style="display:flex;flex-direction:column;gap:1rem;margin-top:2rem">
+          <div class="energy-card">
+            <div class="icon">☀️</div>
+            <h4 style="font-size:1rem;font-weight:700;color:var(--green);margin-bottom:.4rem">Energia Solar</h4>
+            <p class="lead" style="font-size:.82rem">Fazendas 100% autossuficientes aproveitando o sol tropical.</p>
+          </div>
+          <div class="energy-card">
+            <div class="icon">💧</div>
+            <h4 style="font-size:1rem;font-weight:700;color:var(--green);margin-bottom:.4rem">Água Circular</h4>
+            <p class="lead" style="font-size:.82rem">Captação e reuso total em sistemas inteligentes de irrigação.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div class="energy-card">
+            <div class="icon">💨</div>
+            <h4 style="font-size:1rem;font-weight:700;color:var(--green);margin-bottom:.4rem">Energia Eólica</h4>
+            <p class="lead" style="font-size:.82rem">Turbinas de baixo impacto visual nas planícies do Brasil.</p>
+          </div>
+          <div class="energy-highlight">
+            <div class="big">100%</div>
+            <div style="font-family:Arial,sans-serif;font-size:.9rem;opacity:.85;margin-top:.3rem">Energia Limpa até 2030</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-in" style="transition-delay:.15s">
+        <span class="tag">Ciclo Completo</span>
+        <h2 class="h2" style="color:var(--green);margin-bottom:1rem">A Fazenda do Futuro Gera sua Própria Vida</h2>
+        <div class="divider"></div>
+        <p class="lead" style="margin-bottom:1.5rem">
+          Transformamos a propriedade rural de mera consumidora de recursos em uma verdadeira usina de energia limpa e bioma preservado.
+        </p>
+        <a href="#dados-section" class="btn btn-green btn-sm">Conheça o Modelo Sustentável ›</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ INSUMOS -->
+<section id="insumos" class="section section-white">
+  <div class="container">
+    <div style="text-align:center;max-width:620px;margin:0 auto 3rem" class="fade-in">
+      <span class="tag">Insumos e Tecnologia</span>
+      <h2 class="h2" style="color:var(--green)">Materiais que Movem o Campo</h2>
+      <div class="divider divider-center"></div>
+      <p class="lead">Por trás de cada safra recorde existe um arsenal tecnológico de precisão.</p>
+    </div>
+    <div class="stats-banner fade-in" style="margin-bottom:2.5rem;border-radius:var(--radius);overflow:hidden">
+      <img src="images/agri-materials.png" alt="Materiais agrícolas" style="width:100%;height:360px;object-fit:cover;display:block" />
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);display:flex;align-items:flex-end;padding:2rem;border-radius:inherit">
+        <div>
+          <p style="color:#fff;font-size:1.2rem;font-weight:700;font-family:Georgia">Arsenal do Produtor Moderno</p>
+          <p style="color:rgba(255,255,255,.7);font-size:.85rem;font-family:Arial,sans-serif">Da semente ao drone — cada detalhe planejado para a máxima produtividade</p>
+        </div>
+      </div>
+    </div>
+    <div class="grid-3" style="gap:1rem">
+      <div class="insumo-card fade-in" style="background:#fef9ec;border-color:#fde68a">
+        <h4 style="font-family:Arial,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#b45309;margin-bottom:1.25rem">🚜 Maquinário</h4>
+        <div class="insumo-item"><strong>Tratores de Precisão</strong><span>GPS RTK centimétrico para sulcagem e plantio sem sobreposição.</span></div>
+        <div class="insumo-item"><strong>Colheitadeiras Autopilotadas</strong><span>Sensores mapeiam a produtividade m² a m² em tempo real.</span></div>
+        <div class="insumo-item"><strong>Pulverizadores de Barra</strong><span>Bicos individuais controlados evitam desperdício de defensivos.</span></div>
+        <div class="insumo-item"><strong>Drones Agrícolas</strong><span>Pulverização aérea, mapeamento NDVI e monitoramento de pragas.</span></div>
+      </div>
+      <div class="insumo-card fade-in" style="background:#f0fdf4;border-color:#86efac;transition-delay:.08s">
+        <h4 style="font-family:Arial,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#15803d;margin-bottom:1.25rem">🌱 Insumos Biológicos</h4>
+        <div class="insumo-item"><strong>Inoculantes de Rizóbio</strong><span>Bactérias fixadoras eliminam até 80% do adubo na soja.</span></div>
+        <div class="insumo-item"><strong>Biofertilizantes</strong><span>Microrganismos que mobilizam nutrientes do solo.</span></div>
+        <div class="insumo-item"><strong>Bioinseticidas</strong><span>Fungos e bacilos combatem pragas sem agredir a fauna benéfica.</span></div>
+        <div class="insumo-item"><strong>Bioestimulantes</strong><span>Extratos de algas potencializam desenvolvimento radicular.</span></div>
+      </div>
+      <div class="insumo-card fade-in" style="background:#eff6ff;border-color:#93c5fd;transition-delay:.16s">
+        <h4 style="font-family:Arial,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#1d4ed8;margin-bottom:1.25rem">💧 Solo e Água</h4>
+        <div class="insumo-item"><strong>Sensores de Umidade</strong><span>Monitoramento de 0–100 cm e irrigação automática.</span></div>
+        <div class="insumo-item"><strong>Gotejamento</strong><span>Economia de até 60% vs. aspersão convencional.</span></div>
+        <div class="insumo-item"><strong>Pivot Central Inteligente</strong><span>Cada setor recebe a lâmina d'água exata necessária.</span></div>
+        <div class="insumo-item"><strong>Análise de Solo Digital</strong><span>Resultado em 24h via app com mapa de fertilidade georreferenciado.</span></div>
+      </div>
+      <div class="insumo-card fade-in" style="background:#f7fee7;border-color:#a3e635;transition-delay:.24s">
+        <h4 style="font-family:Arial,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#4d7c0f;margin-bottom:1.25rem">🌾 Sementes e Genética</h4>
+        <div class="insumo-item"><strong>Sementes Certificadas</strong><span>Alto vigor, pureza genética rastreável lote a lote.</span></div>
+        <div class="insumo-item"><strong>Variedades OGM e Convencional</strong><span>Germoplasma adaptado a cada bioma brasileiro.</span></div>
+        <div class="insumo-item"><strong>Tratamento Industrial</strong><span>Fungicidas e inoculantes em precisão nanométrica.</span></div>
+        <div class="insumo-item"><strong>Melhoramento por IA</strong><span>Bioinformática acelera cultivares para novas condições climáticas.</span></div>
+      </div>
+      <div class="insumo-card fade-in" style="background:#fff7ed;border-color:#fdba74;transition-delay:.32s">
+        <h4 style="font-family:Arial,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#c2410c;margin-bottom:1.25rem">🧪 Nutrição e Fertilizantes</h4>
+        <div class="insumo-item"><strong>Adubação VRA</strong><span>Taxa variável — cada ponto da lavoura recebe a dose exata de NPK.</span></div>
+        <div class="insumo-item"><strong>Calcário e Gesso</strong><span>Correção do pH e fornecimento de cálcio em profundidade.</span></div>
+        <div class="insumo-item"><strong>Fertirrigação</strong><span>Nutrientes direto às raízes com máxima eficiência.</span></div>
+        <div class="insumo-item"><strong>Micronutrientes Foliares</strong><span>Zinco, boro e molibdênio nos momentos críticos de crescimento.</span></div>
+      </div>
+      <div class="insumo-card fade-in" style="background:#faf5ff;border-color:#d8b4fe;transition-delay:.4s">
+        <h4 style="font-family:Arial,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#7c3aed;margin-bottom:1.25rem">📡 Monitoramento Digital</h4>
+        <div class="insumo-item"><strong>Estações IoT</strong><span>Temperatura, umidade e chuva por ponto de 1 ha com alertas no celular.</span></div>
+        <div class="insumo-item"><strong>Satélite NDVI</strong><span>Saúde da lavoura monitorada semanalmente por índice de vegetação.</span></div>
+        <div class="insumo-item"><strong>ERP Agrícola</strong><span>Financeiro, estoque, clima e produtividade em um único painel.</span></div>
+        <div class="insumo-item"><strong>Rastreabilidade Blockchain</strong><span>Registro imutável da semente ao prato do consumidor.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ ÁRVORES -->
+<section id="arvores" class="section section-green p5-section">
+  <div id="trees-canvas-wrap" style="position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.18"></div>
+  <div class="container" style="position:relative;z-index:1">
+    <div style="text-align:center;max-width:640px;margin:0 auto 3rem" class="fade-in">
+      <span class="tag">Flora e Reflorestamento</span>
+      <h2 class="h2" style="color:#fff">As Árvores que Sustentam o Brasil</h2>
+      <div class="divider divider-center"></div>
+      <p class="lead" style="color:rgba(255,255,255,.65)">
+        Nativas e exóticas, produtivas e protetoras — do ipê à seringueira, cada espécie tem um papel essencial no ecossistema agrícola e florestal do Brasil.
+      </p>
+    </div>
+    <!-- imagens -->
+    <div class="grid-2 fade-in" style="margin-bottom:3rem;gap:1rem">
+      <div class="photo-card" style="height:320px">
+        <img src="images/trees-forest.png" alt="Floresta diversa" />
+        <div class="photo-card-caption"><strong>Diversidade Florestal</strong><p>Plantio misto de nativas e exóticas</p></div>
+      </div>
+      <div style="display:grid;grid-template-rows:1fr 1fr;gap:1rem">
+        <div class="photo-card" style="height:150px">
+          <img src="images/ipe-amarelo.png" alt="Ipê Amarelo" />
+          <div class="photo-card-caption"><strong>Ipê Amarelo</strong><p>Símbolo do Brasil em flor</p></div>
+        </div>
+        <div class="photo-card" style="height:150px">
+          <img src="images/eucalyptus.png" alt="Eucalipto" />
+          <div class="photo-card-caption"><strong>Eucalipto</strong><p>Produção florestal mais eficiente do mundo</p></div>
+        </div>
+      </div>
+    </div>
+    <!-- espécies -->
+    <div class="grid-4">
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem">
+        <strong style="color:#fff">Eucalipto</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Eucalyptus spp.</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Exótica / Comercial</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">7 anos de ciclo. Sequestra 15 t CO₂/ha/ano. Celulose, carvão e energia.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.07s">
+        <strong style="color:#fff">Pinus</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Pinus elliottii</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Exótica / Madeireira</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">MDF, papel e resina. Extração sem derrubar. 15–20 anos de ciclo.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.14s">
+        <strong style="color:#fff">Ipê Amarelo</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Handroanthus albus</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Nativa / Símbolo</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">Árvore nacional. Madeira dura 100 anos. Ideal para APP e ILPF.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.21s">
+        <strong style="color:#fff">Cedro</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Cedrela fissilis</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Nativa / Madeireira</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">Madeira nobre para móveis. Cresce rápido e fornece sombra no ILPF.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.28s">
+        <strong style="color:#fff">Seringueira</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Hevea brasiliensis</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Nativa / Extrativista</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">Borracha natural brasileira. Tapping por 30+ anos sem derrubar.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.35s">
+        <strong style="color:#fff">Açaí</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Euterpe oleracea</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Nativa / Alimentar</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">Palmeira amazônica. Produz por 20+ anos em sistemas agroflorestais.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.42s">
+        <strong style="color:#fff">Mogno Brasileiro</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Swietenia macrophylla</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Nativa / Nobre</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">Madeira mais valorizada do mundo. R$ 5.000+/m³ para exportação.</p>
+      </div>
+      <div class="fade-in" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:1.25rem;transition-delay:.49s">
+        <strong style="color:#fff">Teca</strong>
+        <div style="font-family:Arial,sans-serif;font-size:.75rem;font-style:italic;color:var(--amber);margin:.2rem 0 .4rem">Tectona grandis</div>
+        <span style="font-family:Arial,sans-serif;font-size:.68rem;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);padding:.1rem .6rem;border-radius:999px;display:inline-block;margin-bottom:.6rem">Exótica / Investimento</span>
+        <p style="font-family:Arial,sans-serif;font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.55">Madeira de luxo para yates e fachadas. 15–20% retorno ao ano.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ PECUÁRIA -->
+<section id="pecuaria" class="section section-cream">
+  <div class="container">
+    <div style="text-align:center;max-width:700px;margin:0 auto 3rem" class="fade-in">
+      <span class="tag">Pecuária do Futuro</span>
+      <h2 class="h2" style="color:var(--green)">O Rebanho Mais Eficiente do Mundo</h2>
+      <div class="divider divider-center"></div>
+      <p class="lead">Da boiada Nelore à granja de frango — a pecuária brasileira é a mais diversa, produtiva e sustentável do planeta.</p>
+    </div>
+    <!-- stats banner -->
+    <div class="stats-banner fade-in" style="margin-bottom:2.5rem">
+      <img src="images/cattle-pasture.png" alt="Rebanho bovino" />
+      <div class="stats-overlay">
+        <div class="stats-row">
+          <div class="stat-box"><div class="big">230 Mi</div><p>cabeças de bovinos</p></div>
+          <div class="stat-box"><div class="big">#1</div><p>exportador mundial de carne bovina</p></div>
+          <div class="stat-box"><div class="big">40%</div><p>redução de emissões por arroba (2005–2024)</p></div>
+          <div class="stat-box"><div class="big">8,5 Mi</div><p>empregos diretos na pecuária</p></div>
+        </div>
+      </div>
+    </div>
+    <!-- bovinos -->
+    <div class="grid-2 fade-in" style="margin-bottom:3rem">
+      <div style="display:grid;gap:1rem">
+        <div class="photo-card" style="height:260px">
+          <img src="images/cowboy-herding.png" alt="Vaqueiro conduzindo rebanho" />
+          <div class="photo-card-caption"><strong>A tradição encontra o futuro</strong><p>O peão do século XXI usa drones e dados.</p></div>
+        </div>
+        <div class="photo-card" style="height:220px">
+          <img src="images/cattle-closeup.png" alt="Bovino com brinco eletrônico" />
+          <div class="photo-card-caption"><strong>Monitoramento Individual</strong><p>Brincos eletrônicos rastreiam saúde e peso em tempo real.</p></div>
+        </div>
+      </div>
+      <div>
+        <span class="tag" style="margin-top:1rem">Bovinos</span>
+        <h3 class="h3" style="color:var(--green);margin-bottom:.75rem">Pecuária de Precisão: Animal Saudável, Campo Preservado</h3>
+        <div class="divider"></div>
+        <p class="lead" style="font-size:.9rem;margin-bottom:1rem">A integração Lavoura-Pecuária-Floresta (ILPF) é o modelo mais avançado de uso da terra do mundo. O mesmo hectare que cria bovinos produz grãos e regenera floresta.</p>
+        <ul class="check-list">
+          <li><div class="check-dot">›</div>Pastagens recuperadas com bioinsumos e capim melhorado</li>
+          <li><div class="check-dot">›</div>Rastreabilidade total da fazenda até o prato</li>
+          <li><div class="check-dot">›</div>Redução de metano com aditivos naturais na dieta</li>
+          <li><div class="check-dot">›</div>Bem-estar animal certificado para mercados premium</li>
+          <li><div class="check-dot">›</div>Créditos de carbono gerados pelo manejo do solo</li>
+        </ul>
+      </div>
+    </div>
+    <!-- outras espécies -->
+    <h3 class="h3 fade-in" style="color:var(--green);text-align:center;margin-bottom:2rem">Diversidade que Alimenta o Mundo</h3>
+    <div class="grid-3">
+      <div class="species-card fade-in">
+        <div class="species-img"><img src="images/poultry-farm.png" alt="Avicultura" /><div class="badge">Avicultura</div></div>
+        <div class="species-body">
+          <h4 style="color:var(--green);font-size:1rem;font-weight:700">Maior Exportador de Frango</h4>
+          <div class="sci">Brasil — #1 no mundo</div>
+          <p>Granjas modernas com bem-estar certificado e rastreabilidade completa do nascedouro ao supermercado.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center">
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">7,5 Mi t</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">produção/ano</p></div>
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">#1</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">exportador aves</p></div>
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">95%</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">rastreabilidade</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="species-card fade-in" style="transition-delay:.1s">
+        <div class="species-img"><img src="images/pig-farm.png" alt="Suinocultura" /><div class="badge">Suinocultura</div></div>
+        <div class="species-body">
+          <h4 style="color:var(--green);font-size:1rem;font-weight:700">Eficiência e Sustentabilidade</h4>
+          <div class="sci">4º maior produtor mundial</div>
+          <p>Biodigestores transformam dejetos em energia limpa. Genética avançada com menor pegada ambiental.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center">
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">4,2 Mi t</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">carne suína/ano</p></div>
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">#4</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">produtor mundial</p></div>
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">100%</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">biogás nas granjas</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="species-card fade-in" style="transition-delay:.2s">
+        <div class="species-img"><img src="images/dairy-farm.png" alt="Bovinocultura Leiteira" /><div class="badge">Leiteira</div></div>
+        <div class="species-body">
+          <h4 style="color:var(--green);font-size:1rem;font-weight:700">Leite de Alta Qualidade</h4>
+          <div class="sci">Ordenha robótica 24 horas</div>
+          <p>Ordenhadeiras robóticas e alimentação computadorizada garantem produção máxima com saúde monitorada.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center">
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">37 Bi L</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">produção/ano</p></div>
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">Robótica</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">ordenha 24h</p></div>
+            <div><strong style="font-size:.95rem;color:var(--green);font-family:Georgia">3x</strong><p style="font-size:.7rem;color:var(--muted);font-family:Arial,sans-serif">vs média global</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- confinamento -->
+    <div class="grid-2 fade-in" style="margin-top:3rem;background:var(--green);border-radius:var(--radius);overflow:hidden;gap:0">
+      <div style="position:relative;min-height:340px">
+        <img src="images/feedlot-aerial.png" alt="Confinamento" style="width:100%;height:100%;object-fit:cover;display:block" />
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5),transparent);display:flex;align-items:flex-end;padding:1.5rem">
+          <div><p style="color:#fff;font-weight:700;font-size:1rem">Confinamento de Precisão</p><p style="color:rgba(255,255,255,.65);font-size:.8rem;font-family:Arial,sans-serif">Gestão total via plataforma digital</p></div>
+        </div>
+      </div>
+      <div style="padding:2.5rem;color:#fff">
+        <span class="tag">Confinamento Inteligente</span>
+        <h3 class="h3" style="margin-bottom:.75rem">Máxima Rastreabilidade do Pasto ao Prato</h3>
+        <p style="font-family:Arial,sans-serif;font-size:.88rem;color:rgba(255,255,255,.65);line-height:1.65;margin-bottom:1.5rem">Balanças automáticas e IA ajustam a dieta de cada lote diariamente — maximizando ganho de peso com mínimo desperdício de ração.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:.75rem;padding:1rem"><div style="font-size:1.4rem;font-weight:700;color:var(--amber);font-family:Georgia">5,5 Mi</div><div style="font-family:Arial,sans-serif;font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem">animais/ano</div></div>
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:.75rem;padding:1rem"><div style="font-size:1.4rem;font-weight:700;color:var(--amber);font-family:Georgia">1,5 kg</div><div style="font-family:Arial,sans-serif;font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem">ganho/dia no confin.</div></div>
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:.75rem;padding:1rem"><div style="font-size:1.4rem;font-weight:700;color:var(--amber);font-family:Georgia">95%</div><div style="font-family:Arial,sans-serif;font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem">eficiência alimentar com IA</div></div>
+          <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:.75rem;padding:1rem"><div style="font-size:1.4rem;font-weight:700;color:var(--amber);font-family:Georgia">Zero</div><div style="font-family:Arial,sans-serif;font-size:.75rem;color:rgba(255,255,255,.55);margin-top:.2rem">resíduo com biodigestores</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ PESSOAS -->
+<section id="pessoas" class="section section-white">
+  <div class="container">
+    <div class="grid-2">
+      <div class="fade-in">
+        <h2 class="h2" style="color:var(--green);margin-bottom:1rem">Nossa Força Vem da Nossa Gente</h2>
+        <div class="divider"></div>
+        <p class="lead" style="margin-bottom:1rem">Por trás de cada drone e cada satélite, existem as mãos e as mentes dos agricultores brasileiros. Pessoas conectadas com a terra e com o futuro.</p>
+        <div class="quote-bar">
+          <blockquote>"Nós não herdamos a terra de nossos pais, nós a pegamos emprestada de nossos filhos."</blockquote>
+          <cite>— Provérbio</cite>
+        </div>
+        <button class="btn btn-green btn-sm" onclick="openContact()">Faça Parte desta História ›</button>
+      </div>
+      <div class="photo-card fade-in" style="height:500px;transition-delay:.15s">
+        <img src="images/agronomists.png" alt="Agricultores brasileiros" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ DADOS -->
+<section id="dados-section" class="section section-cream">
+  <div class="container">
+    <div style="text-align:center;max-width:600px;margin:0 auto 3rem" class="fade-in">
+      <span class="tag">Dados e Pesquisa</span>
+      <h2 class="h2" style="color:var(--green)">Brasil em Números</h2>
+      <div class="divider divider-center"></div>
+      <p class="lead">O agronegócio brasileiro em perspectiva com dados atualizados.</p>
+    </div>
+    <!-- p5.js bar chart -->
+    <div id="data-canvas-wrap" class="fade-in" style="border-radius:var(--radius);overflow:hidden;margin-bottom:2rem;background:#fff;border:1px solid var(--border)"></div>
+    <!-- table -->
+    <div class="tbl-wrap fade-in" style="transition-delay:.2s">
+      <table>
+        <thead>
+          <tr><th>Produto</th><th>Produção (2024)</th><th>Ranking Mundial</th><th>Crescimento 10 anos</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Soja</td><td>169 Mi toneladas</td><td>#1 produtor</td><td>+62%</td></tr>
+          <tr><td>Carne Bovina</td><td>11,5 Mi toneladas</td><td>#1 exportador</td><td>+38%</td></tr>
+          <tr><td>Frango</td><td>14,9 Mi toneladas</td><td>#3 produtor / #1 exportador</td><td>+45%</td></tr>
+          <tr><td>Açúcar</td><td>46 Mi toneladas</td><td>#1 produtor e exportador</td><td>+21%</td></tr>
+          <tr><td>Milho</td><td>137 Mi toneladas</td><td>#3 produtor</td><td>+71%</td></tr>
+          <tr><td>Café</td><td>3,8 Mi toneladas</td><td>#1 produtor e exportador</td><td>+17%</td></tr>
+          <tr><td>Celulose</td><td>24,8 Mi toneladas</td><td>#1 exportador</td><td>+89%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ IMAGE BREAKER -->
+<div class="img-breaker">
+  <img src="images/cerrado-crops.png" alt="Cerrado e lavouras" />
+  <div class="img-breaker-overlay">
+    <h2>O Brasil não é apenas o celeiro do mundo. É o guardião do futuro.</h2>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CTA -->
+<section class="cta-section section-green">
+  <div class="container">
+    <div class="leaf-icon">🌿</div>
+    <h2 class="h2 fade-in" style="color:#fff;max-width:700px;margin:0 auto 1.25rem">Faça Parte da Revolução Verde</h2>
+    <p class="lead fade-in" style="color:rgba(255,255,255,.65);max-width:560px;margin:0 auto 2.5rem;transition-delay:.1s">Seja você investidor, agrônomo, pesquisador ou produtor. O novo capítulo da agricultura brasileira está sendo escrito agora.</p>
+    <div class="hero-btns fade-in" style="transition-delay:.2s">
+      <button class="btn btn-primary" onclick="openContact()">Fale com um Especialista</button>
+      <button class="btn btn-outline" onclick="openManifesto()">Baixe o Manifesto 2025</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">🌿 Agro Futuro Brasil</div>
+        <p class="footer-desc">Transformando o campo através da tecnologia, conectando produtores a um futuro mais inteligente e sustentável.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navegação</h4>
+        <ul>
+          <li><a href="#quem-somos">Sobre o Projeto</a></li>
+          <li><a href="#pilares">Nossas Soluções</a></li>
+          <li><a href="#sustentabilidade">Sustentabilidade</a></li>
+          <li><a href="#arvores">Árvores e Flora</a></li>
+          <li><a href="#pecuaria">Pecuária</a></li>
+          <li><a href="#dados-section">Dados e Pesquisa</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <div style="display:flex;flex-direction:column;gap:.85rem">
+          <div class="footer-contact-item"><span class="icon">✉</span><a href="mailto:contato@agrofuturobrasil.com.br">contato@agrofuturobrasil.com.br</a></div>
+          <div class="footer-contact-item"><span class="icon">📱</span><a href="https://wa.me/5500999999999" target="_blank">(00) 99999-9999 <span style="color:var(--amber);font-size:.75rem;font-weight:700">WhatsApp</span></a></div>
+          <div class="footer-contact-item"><span class="icon">📍</span><div><div>Brasil</div><div style="font-size:.75rem;opacity:.7">Atuamos em todo o território nacional</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span id="yr"></span> Agro Futuro Brasil. Todos os direitos reservados.</p>
+      <button onclick="openContact()">Fale Conosco</button>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════ MODAL CONTATO -->
+<div class="modal-backdrop" id="modal-contact">
+  <div class="modal" id="contact-box">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeContact()">✕</button>
+      <span class="tag">Agro Futuro Brasil</span>
+      <h2>Fale com um Especialista</h2>
+      <p>Nossa equipe responde em até 24 horas úteis.</p>
+    </div>
+    <div class="modal-body" id="contact-form-wrap">
+      <form id="contact-form" onsubmit="submitContact(event)">
+        <div class="form-group" id="fg-nome">
+          <label>Nome completo</label>
+          <input type="text" id="inp-nome" placeholder="Seu nome" />
+          <div class="form-error" id="err-nome"></div>
+        </div>
+        <div class="form-group" id="fg-email">
+          <label>E-mail</label>
+          <input type="email" id="inp-email" placeholder="seu@email.com" />
+          <div class="form-error" id="err-email"></div>
+        </div>
+        <div class="form-group">
+          <label>Seu perfil</label>
+          <div class="perfis" id="perfis-wrap">
+            <button type="button" class="perfil-btn" onclick="selectPerfil(this)">Investidor</button>
+            <button type="button" class="perfil-btn" onclick="selectPerfil(this)">Produtor Rural</button>
+            <button type="button" class="perfil-btn" onclick="selectPerfil(this)">Agrônomo / Pesquisador</button>
+            <button type="button" class="perfil-btn" onclick="selectPerfil(this)">Governo / Política</button>
+            <button type="button" class="perfil-btn" onclick="selectPerfil(this)">Outro</button>
+          </div>
+          <div class="form-error" id="err-perfil"></div>
+        </div>
+        <div class="form-group">
+          <label>Mensagem <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+          <textarea id="inp-msg" placeholder="Como podemos ajudar?"></textarea>
+        </div>
+        <button type="submit" class="btn-submit" id="btn-submit">✉ Enviar Mensagem</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ MODAL MANIFESTO -->
+<div class="modal-backdrop" id="modal-manifesto">
+  <div class="modal manifesto-modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeManifesto()">✕</button>
+      <span class="tag">Documento Oficial</span>
+      <h2>Manifesto Agro Futuro Brasil</h2>
+      <p>Edição 2025 — Os seis princípios que definem o novo agro brasileiro</p>
+    </div>
+    <div class="manifesto-scroll">
+      <p class="manifesto-intro">"Um futuro sustentável da agricultura brasileira: forte, próspera e em equilíbrio perfeito entre alta produção e preservação ambiental."</p>
+      <div class="manifesto-item"><div class="manifesto-num">01</div><div><h4>Produzir Sem Destruir</h4><p>O Brasil comprova que alta produtividade e preservação florestal não são opostos — são sócios. Cada hectare de Cerrado preservado financia a próxima safra.</p></div></div>
+      <div class="manifesto-item"><div class="manifesto-num">02</div><div><h4>Tecnologia a Serviço da Vida</h4><p>Drones, sensores IoT, inteligência artificial e bioinsumos não são o fim da agricultura tradicional — são o seu maior aliado. O campo digital é mais humano e mais verde.</p></div></div>
+      <div class="manifesto-item"><div class="manifesto-num">03</div><div><h4>Solo Vivo, País Forte</h4><p>Um solo saudável é o capital mais precioso do Brasil. Microbiologia, matéria orgânica e cobertura permanente são investimentos que rendem por gerações.</p></div></div>
+      <div class="manifesto-item"><div class="manifesto-num">04</div><div><h4>Energia que Nasce da Terra</h4><p>Solar, eólica, biogás e biomassa fazem das fazendas brasileiras usinas de energia limpa. Até 2030, 100% das propriedades ativas serão autossuficientes.</p></div></div>
+      <div class="manifesto-item"><div class="manifesto-num">05</div><div><h4>Carbono é a Nova Safra</h4><p>Cada tonelada de CO₂ capturada pelas florestas preservadas tem valor real no mercado global. O Brasil pode faturar mais de R$ 3 trilhões com créditos de carbono até 2035.</p></div></div>
+      <div class="manifesto-item"><div class="manifesto-num">06</div><div><h4>O Brasil Alimenta o Futuro</h4><p>Em 2050 seremos 10 bilhões de pessoas. O Brasil tem 40% das terras aráveis disponíveis e 12% da água doce mundial. A responsabilidade é nossa. A oportunidade também.</p></div></div>
+    </div>
+    <div class="manifesto-footer">
+      <button class="btn btn-green" onclick="downloadManifesto()">⬇ Baixar (.txt)</button>
+      <button class="btn btn-outline" style="color:var(--green);border-color:var(--border)" onclick="closeManifesto()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SCRIPTS -->
+<script>
+// Year
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// Fade-in observer
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// ── CONTACT MODAL ────────────────────────────
+let selectedPerfil = '';
+function openContact() { document.getElementById('modal-contact').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeContact() {
+  document.getElementById('modal-contact').classList.remove('open');
+  document.body.style.overflow='';
+  document.getElementById('contact-form-wrap').innerHTML = document.getElementById('contact-form-wrap').innerHTML;
+  selectedPerfil = '';
+  document.querySelectorAll('.perfil-btn').forEach(b => b.classList.remove('selected'));
+}
+function selectPerfil(btn) {
+  document.querySelectorAll('.perfil-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected'); selectedPerfil = btn.textContent.trim();
+  document.getElementById('err-perfil').textContent = '';
+}
+function submitContact(e) {
+  e.preventDefault();
+  const nome = document.getElementById('inp-nome').value.trim();
+  const email = document.getElementById('inp-email').value.trim();
+  let ok = true;
+  document.getElementById('err-nome').textContent = '';
+  document.getElementById('err-email').textContent = '';
+  document.getElementById('err-perfil').textContent = '';
+  document.getElementById('fg-nome').classList.remove('error');
+  document.getElementById('fg-email').classList.remove('error');
+  if (!nome) { document.getElementById('err-nome').textContent = 'Nome é obrigatório'; document.getElementById('fg-nome').classList.add('error'); ok=false; }
+  if (!email || !/\S+@\S+\.\S+/.test(email)) { document.getElementById('err-email').textContent = 'E-mail inválido'; document.getElementById('fg-email').classList.add('error'); ok=false; }
+  if (!selectedPerfil) { document.getElementById('err-perfil').textContent = 'Selecione seu perfil'; ok=false; }
+  if (!ok) return;
+  const btn = document.getElementById('btn-submit');
+  btn.textContent = 'Enviando…'; btn.disabled = true;
+  setTimeout(() => {
+    document.getElementById('contact-form-wrap').innerHTML = `
+      <div class="modal-success">
+        <div class="check">✓</div>
+        <h3>Mensagem Enviada!</h3>
+        <p>Nossa equipe entrará em contato em breve. Obrigado pelo interesse no futuro do agro brasileiro.</p>
+        <button class="btn btn-green" onclick="closeContact()">Fechar</button>
+      </div>`;
+  }, 1400);
+}
+document.getElementById('modal-contact').addEventListener('click', function(e){ if(e.target===this) closeContact(); });
+
+// ── MANIFESTO MODAL ──────────────────────────
+function openManifesto() { document.getElementById('modal-manifesto').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeManifesto() { document.getElementById('modal-manifesto').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('modal-manifesto').addEventListener('click', function(e){ if(e.target===this) closeManifesto(); });
+function downloadManifesto() {
+  const txt = `MANIFESTO AGRO FUTURO BRASIL 2025\n=====================================\n\n01. Produzir Sem Destruir\nO Brasil comprova que alta produtividade e preservação florestal não são opostos — são sócios.\n\n02. Tecnologia a Serviço da Vida\nDrones, IoT, IA e bioinsumos são o maior aliado do campo. O campo digital é mais humano e mais verde.\n\n03. Solo Vivo, País Forte\nMicrobiologia e matéria orgânica são investimentos que rendem por gerações.\n\n04. Energia que Nasce da Terra\nSolar, eólica e biogás fazem das fazendas usinas de energia limpa. 100% até 2030.\n\n05. Carbono é a Nova Safra\nO Brasil pode faturar R$ 3 trilhões com créditos de carbono até 2035.\n\n06. O Brasil Alimenta o Futuro\n10 bilhões de pessoas em 2050. O Brasil tem 40% das terras aráveis disponíveis do planeta.\n\n---\n© ${new Date().getFullYear()} Agro Futuro Brasil\ncontato@agrofuturobrasil.com.br`;
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt);
+  a.download = 'Manifesto-Agro-Futuro-Brasil-2025.txt';
+  a.click();
+}
+
+// ── P5.JS — HERO PARTICLES ───────────────────
+new p5(function(s) {
+  let particles = [];
+  s.setup = function() {
+    const wrap = document.getElementById('hero-canvas-wrap');
+    const c = s.createCanvas(wrap.offsetWidth, wrap.offsetHeight);
+    c.parent('hero-canvas-wrap');
+    for (let i = 0; i < 55; i++) particles.push({ x: s.random(s.width), y: s.random(s.height), r: s.random(1.5, 4), sp: s.random(.25, .7), op: s.random(60, 160) });
+  };
+  s.draw = function() {
+    s.clear();
+    particles.forEach(p => {
+      s.noStroke();
+      s.fill(255, 255, 255, p.op);
+      s.ellipse(p.x, p.y, p.r * 2);
+      p.y -= p.sp;
+      if (p.y < -5) { p.y = s.height + 5; p.x = s.random(s.width); }
+    });
+  };
+  s.windowResized = function() {
+    const wrap = document.getElementById('hero-canvas-wrap');
+    s.resizeCanvas(wrap.offsetWidth, wrap.offsetHeight);
+  };
+});
+
+// ── P5.JS — TREES SECTION FLOATING LEAVES ───
+new p5(function(s) {
+  let leaves = [];
+  s.setup = function() {
+    const wrap = document.getElementById('trees-canvas-wrap');
+    const c = s.createCanvas(wrap.offsetWidth || 1200, wrap.offsetHeight || 600);
+    c.parent('trees-canvas-wrap');
+    for (let i = 0; i < 40; i++) leaves.push({ x: s.random(s.width), y: s.random(s.height), sz: s.random(6,18), sp: s.random(.3,.8), sw: s.random(-1,1), ang: s.random(s.TWO_PI) });
+  };
+  s.draw = function() {
+    s.clear();
+    leaves.forEach(l => {
+      s.push();
+      s.translate(l.x, l.y);
+      s.rotate(l.ang);
+      s.fill(212, 160, 23, 120);
+      s.noStroke();
+      s.ellipse(0, 0, l.sz, l.sz * 2.2);
+      s.pop();
+      l.y += l.sp; l.x += l.sw * 0.4; l.ang += 0.012;
+      if (l.y > s.height + 20) { l.y = -20; l.x = s.random(s.width); }
+    });
+  };
+  s.windowResized = function() {
+    const wrap = document.getElementById('trees-canvas-wrap');
+    s.resizeCanvas(wrap.offsetWidth, wrap.offsetHeight || 600);
+  };
+});
+
+// ── P5.JS — DATA BAR CHART ───────────────────
+new p5(function(s) {
+  const data = [
+    { label: 'Soja', val: 169, color: [212,160,23] },
+    { label: 'Milho', val: 137, color: [26,71,49] },
+    { label: 'Açúcar', val: 46, color: [45,106,79] },
+    { label: 'Frango', val: 15, color: [180,130,10] },
+    { label: 'Carne', val: 12, color: [22,60,40] },
+    { label: 'Café', val: 4, color: [100,70,20] },
+  ];
+  const maxVal = 169;
+  let anim = 0;
+
+  s.setup = function() {
+    const wrap = document.getElementById('data-canvas-wrap');
+    const c = s.createCanvas(wrap.offsetWidth || 900, 320);
+    c.parent('data-canvas-wrap');
+  };
+  s.draw = function() {
+    s.background(255);
+    anim = s.min(anim + 0.025, 1);
+    const pad = 50, barW = Math.floor((s.width - pad * 2) / data.length) - 14;
+    s.textFont('Arial'); s.textAlign(s.CENTER);
+
+    // title
+    s.fill(26,71,49); s.textSize(13); s.textStyle(s.BOLD);
+    s.text('Produção Brasileira 2024 — Principais Commodities (milhões de toneladas)', s.width/2, 22);
+
+    data.forEach((d, i) => {
+      const x = pad + i * (barW + 14);
+      const maxH = s.height - 85;
+      const h = (d.val / maxVal) * maxH * anim;
+      const y = s.height - 50 - h;
+      // bar
+      s.fill(...d.color);
+      s.noStroke();
+      s.rect(x, y, barW, h, 5, 5, 0, 0);
+      // value
+      s.fill(26,71,49); s.textSize(11); s.textStyle(s.BOLD);
+      if (anim > 0.5) s.text(d.val + ' Mi', x + barW/2, y - 6);
+      // label
+      s.fill(107,114,128); s.textSize(10); s.textStyle(s.NORMAL);
+      s.text(d.label, x + barW/2, s.height - 34);
+    });
+    // axis line
+    s.stroke(229,231,235); s.strokeWeight(1);
+    s.line(pad - 5, s.height - 50, s.width - pad + 5, s.height - 50);
+  };
+  s.windowResized = function() {
+    s.resizeCanvas(document.getElementById('data-canvas-wrap').offsetWidth, 320);
+  };
+});
+</script>
+</body>
+</html>
